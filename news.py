@@ -2,7 +2,7 @@ import streamlit as st
 import json
 import requests
 from newspaper import Article
-from transformers import pipeline
+from transformers import pipeline, BartForConditionalGeneration
 
 # Set Streamlit page configuration
 st.set_page_config(
@@ -17,13 +17,12 @@ st.title(
 )
 
 # Summarization pipeline
-summarizer = pipeline("summarization")
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
 # Containers for article information
 article_titles = []
 article_texts = []
 article_summaries = []
-article_urls = []
 
 
 def run():
@@ -50,12 +49,9 @@ def run():
 
                     for article in articles:
                         article_titles.append(article["title"])
-                        article_urls.append(article["url"])
-
-                        news_article = Article(article["url"])
-                        news_article.download()
-                        news_article.parse()
-                        article_texts.append(news_article.text)
+                        article_texts.append(
+                            article["content"] or article["description"] or ""
+                        )
 
                     for text in article_texts:
                         if text:
@@ -79,7 +75,6 @@ def run():
         st.markdown(article_summaries[i])
         with st.expander("Full Article"):
             st.markdown(article_texts[i])
-            st.markdown(f"[Read more at the source]({article_urls[i]})")
 
 
 if __name__ == "__main__":
